@@ -16,7 +16,7 @@ int main()
 		cout << endl;
 	}
 
-	cout << "pola2 2\n";
+	cout << "pola2 \n";
 	for (int i = 1; i <= n; i++)
 	{
 		for (int j = n; j >= i; j--)
