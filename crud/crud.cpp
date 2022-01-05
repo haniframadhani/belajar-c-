@@ -19,6 +19,8 @@ int getDataSize(fstream &data);
 mahasiswa readData(fstream &data, int posisi);
 void addDataMahasiswa(fstream &data);
 void displayDataMahasiswa(fstream &data);
+void updateRecord(fstream &data);
+void deleteRecord(fstream &data);
 
 int main()
 {
@@ -53,9 +55,15 @@ int main()
 			break;
 		case UPDATE:
 			cout << "Ubah data mahasiswa" << endl;
+			displayDataMahasiswa(data);
+			updateRecord(data);
+			displayDataMahasiswa(data);
 			break;
 		case DELETE:
 			cout << "Hapus data mahasiswa" << endl;
+			displayDataMahasiswa(data);
+			deleteRecord(data);
+			displayDataMahasiswa(data);
 			break;
 		default:
 			cout << "Pilihan tidak ditemukan" << endl;
@@ -146,6 +154,70 @@ mahasiswa readData(fstream &data, int posisi)
 	data.seekg((posisi - 1) * sizeof(mahasiswa), ios::beg);
 	data.read(reinterpret_cast<char *>(&readMahasiswa), sizeof(mahasiswa));
 	return readMahasiswa;
+}
+
+void deleteRecord(fstream &data)
+{
+	int nomor, size, offset;
+	mahasiswa blankMahasiswa, tempMahasiswa;
+	fstream dataSementara;
+	size = getDataSize(data);
+	// 1. pilih nomor
+	cout << "hapus no : ";
+	cin >> nomor;
+	// 2. diposisi ini diisi dengan data kosong
+	writeData(data, nomor, blankMahasiswa);
+	// 3. check data dari file data.bin, kalau ada pindah ke file sementara
+	dataSementara.open("temp.dat", ios::trunc | ios::out | ios::in | ios::binary);
+	offset = 0;
+	for (int i = 1; i <= size; i++)
+	{
+		tempMahasiswa = readData(data, i);
+		if (!tempMahasiswa.nama.empty())
+		{
+			writeData(dataSementara, i - offset, tempMahasiswa);
+		}
+		else
+		{
+			offset++;
+			cout << "deleted item" << endl;
+		}
+	}
+	// 4. pindahkan data dari file sementara ke file data.bin
+	size = getDataSize(dataSementara);
+	data.close();
+	data.open("data.bin", ios::trunc | ios::out | ios::binary);
+	data.close();
+	data.open("data.bin", ios::out | ios::in | ios::binary);
+	for (int i = 1; i <= size; i++)
+	{
+		tempMahasiswa = readData(dataSementara, i);
+		writeData(data, i, tempMahasiswa);
+	}
+}
+
+void updateRecord(fstream &data)
+{
+	int nomor;
+	mahasiswa updateMahasiswa;
+	cout << "pilih no : ";
+	cin >> nomor;
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+	updateMahasiswa = readData(data, nomor);
+	cout << "\n\npilihan data" << endl;
+	cout << "nim : " << updateMahasiswa.nim << endl;
+	cout << "nama : " << updateMahasiswa.nama << endl;
+	cout << "jurusan : " << updateMahasiswa.jurusan << endl;
+
+	cout << "\nmerubah data : " << endl;
+	cout << "NIM : ";
+	getline(cin, updateMahasiswa.nim);
+	cout << "nama : ";
+	getline(cin, updateMahasiswa.nama);
+	cout << "jurusan : ";
+	getline(cin, updateMahasiswa.jurusan);
+
+	writeData(data, nomor, updateMahasiswa);
 }
 
 void addDataMahasiswa(fstream &data)
